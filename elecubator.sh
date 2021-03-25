@@ -32,7 +32,10 @@ xmlstarlet ed --inplace -u '//*[@id="videolibrary.backgroundupdate"]' -v 'true' 
 xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]/@default' -v 'false' ${GUI_SETTINGS}
 xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]' -v '2' ${GUI_SETTINGS}
 
+# TODO: Install the resource.language.fr_fr language.
+
 # Install the thoradia repository.
+# TODO: Always install the latest version.
 if [ ! -d "${ADDON_FOLDER}/service.thoradia" ]; then
     cd "${ADDON_FOLDER}"
     curl -A "${AGENT_STRING}" -OL "${THORADIA_URL}/releases/download/9.80.6.25/service.thoradia-9.80.6.25.zip"
@@ -42,6 +45,7 @@ if [ ! -d "${ADDON_FOLDER}/service.thoradia" ]; then
 fi
 
 # Install the qbittorrent service.
+# TODO: Always install the latest version.
 if [ ! -d "${ADDON_FOLDER}/service.qbittorrent" ]; then
     cd "${ADDON_FOLDER}"
     curl -A "${AGENT_STRING}" -OL "${THORADIA_URL}/raw/9.80.9/9.80.9/ARMv8/arm/service.qbittorrent/service.qbittorrent-9.80.9.35.zip"
@@ -51,6 +55,7 @@ if [ ! -d "${ADDON_FOLDER}/service.qbittorrent" ]; then
 fi
 
 # Edit the qBittorrent.conf file.
+# TODO: Make it working for any external drives.
 mkdir -p "$(dirname "${QBITT_CONFIG}")" && cat /dev/null >"${QBITT_CONFIG}"
 echo 'Bittorrent\MaxRatio=0' | tee -a "${QBITT_CONFIG}"
 echo 'Downloads\SavePath=/var/media/External/Torrents/' | tee -a "${QBITT_CONFIG}"
