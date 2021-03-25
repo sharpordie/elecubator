@@ -33,6 +33,14 @@ xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]/@default' -
 xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]' -v '2' ${GUI_SETTINGS}
 
 # TODO: Install the resource.language.fr_fr language.
+# TODO: Always install the latest version.
+if [ ! -d "${ADDON_FOLDER}/resource.language.fr_fr" ]; then
+    cd "${ADDON_FOLDER}"
+    curl -A "${AGENT_STRING}" -OL 'http://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/resource.language.fr_fr-9.0.36.zip'
+    unzip resource.language.fr_fr-9.0.36.zip
+    rm resource.language.fr_fr-9.0.36.zip
+    cd "${HOME}"
+fi
 
 # Install the thoradia repository.
 # TODO: Always install the latest version.
@@ -55,11 +63,11 @@ if [ ! -d "${ADDON_FOLDER}/service.qbittorrent" ]; then
 fi
 
 # Edit the qBittorrent.conf file.
-# TODO: Make it working for any external drives.
+# TODO: Get the external drive name automatically.
 mkdir -p "$(dirname "${QBITT_CONFIG}")" && cat /dev/null >"${QBITT_CONFIG}"
 echo 'Bittorrent\MaxRatio=0' | tee -a "${QBITT_CONFIG}"
-echo 'Downloads\SavePath=/var/media/External/Torrents/' | tee -a "${QBITT_CONFIG}"
-echo 'Downloads\TempPath=/var/media/External/Torrents/Incomplete/' | tee -a "${QBITT_CONFIG}"
+echo 'Downloads\SavePath=/var/media/Expansion/Torrents/' | tee -a "${QBITT_CONFIG}"
+echo 'Downloads\TempPath=/var/media/Expansion/Torrents/Incomplete/' | tee -a "${QBITT_CONFIG}"
 echo 'Downloads\TempPathEnabled=true' | tee -a "${QBITT_CONFIG}"
 echo 'General\Locale=fr_FR' | tee -a "${QBITT_CONFIG}"
 echo 'WebUI\Username=admin' | tee -a "${QBITT_CONFIG}"
