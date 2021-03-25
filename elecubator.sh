@@ -36,7 +36,7 @@ xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]' -v '2' ${G
 # TODO: Always install the latest version.
 if [ ! -d "${ADDON_FOLDER}/resource.language.fr_fr" ]; then
     cd "${ADDON_FOLDER}"
-    curl -A "${AGENT_STRING}" -OL 'http://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/resource.language.fr_fr-9.0.36.zip'
+    curl -A "${AGENT_STRING}" -LO 'http://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/resource.language.fr_fr-9.0.36.zip'
     unzip resource.language.fr_fr-9.0.36.zip
     rm resource.language.fr_fr-9.0.36.zip
     cd "${HOME}"
@@ -46,7 +46,7 @@ fi
 # TODO: Always install the latest version.
 if [ ! -d "${ADDON_FOLDER}/service.thoradia" ]; then
     cd "${ADDON_FOLDER}"
-    curl -A "${AGENT_STRING}" -OL "${THORADIA_URL}/releases/download/9.80.6.25/service.thoradia-9.80.6.25.zip"
+    curl -A "${AGENT_STRING}" -LO "${THORADIA_URL}/releases/download/9.80.6.25/service.thoradia-9.80.6.25.zip"
     unzip service.thoradia-9.80.6.25.zip
     rm service.thoradia-9.80.6.25.zip
     cd "${HOME}"
@@ -56,7 +56,7 @@ fi
 # TODO: Always install the latest version.
 if [ ! -d "${ADDON_FOLDER}/service.qbittorrent" ]; then
     cd "${ADDON_FOLDER}"
-    curl -A "${AGENT_STRING}" -OL "${THORADIA_URL}/raw/9.80.9/9.80.9/ARMv8/arm/service.qbittorrent/service.qbittorrent-9.80.9.35.zip"
+    curl -A "${AGENT_STRING}" -LO "${THORADIA_URL}/raw/9.80.9/9.80.9/ARMv8/arm/service.qbittorrent/service.qbittorrent-9.80.9.35.zip"
     unzip service.qbittorrent-9.80.9.35.zip
     rm service.qbittorrent-9.80.9.35.zip
     cd "${HOME}"
