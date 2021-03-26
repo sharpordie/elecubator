@@ -1,12 +1,69 @@
 #!/usr/bin/env bash
 
 # Constant variables.
-readonly ADDON_FOLDER='/storage/.kodi/addons'
-readonly AGENT_STRING='Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0'
-readonly GUI_SETTINGS='/storage/.kodi/userdata/guisettings.xml'
-readonly QBITT_CONFIG='/storage/.kodi/userdata/addon_data/service.qbittorrent/.config/qBittorrent/qBittorrent.conf'
-readonly SOURCES_FILE='/storage/userdata/sources.xml'
-readonly THORADIA_URL='https://github.com/thoradia/thoradia'
+readonly ADDON_FOLDER="${HOME}/.kodi/addons"
+readonly AGENT_STRING="Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
+readonly ESTUARY_CONF="${HOME}/.kodi/userdata/addon_data/skin.estuary/settings.xml"
+readonly GUI_SETTINGS="${HOME}/.kodi/userdata/guisettings.xml"
+readonly MEDIA_FOLDER="/var/media/$(ls /var/media | sort -n | head -1)"
+readonly QBITT_CONFIG="${HOME}/.opt/etc/qBittorrent_entware/config/qBittorrent.conf"
+readonly SOURCES_FILE="${HOME}/.kodi/userdata/sources.xml"
+
+# Create the folder tree on the external drive.
+if [ "${MEDIA_FOLDER}" != "/var/media/" ]; then
+    mkdir -p "${MEDIA_FOLDER}/Albums"
+    # mkdir -p "${MEDIA_FOLDER}/Animes"
+    # mkdir -p "${MEDIA_FOLDER}/Cartoons"
+    mkdir -p "${MEDIA_FOLDER}/Movies"
+    mkdir -p "${MEDIA_FOLDER}/Pictures"
+    mkdir -p "${MEDIA_FOLDER}/Series"
+    mkdir -p "${MEDIA_FOLDER}/Torrents"
+    mkdir -p "${MEDIA_FOLDER}/Torrents/Incomplete"
+    mkdir -p "${MEDIA_FOLDER}/Tutorials"
+fi
+
+# Install the entware package manager and reboot.
+if ! [ -x "$(command -v opkg)" ]; then yes | installentware; fi
+
+# Install the qbittorrent package.
+opkg update && opkg upgrade
+opkg install qbittorrent
+
+# Edit the qBittorrent.conf file.
+mkdir -p "$(dirname "${QBITT_CONFIG}")" && cat /dev/null >"${QBITT_CONFIG}"
+echo '[Preferences]' | tee -a "${QBITT_CONFIG}"
+echo 'Bittorrent\MaxRatio=0' | tee -a "${QBITT_CONFIG}"
+echo 'Connection\PortRangeMin=18032' | tee -a "${QBITT_CONFIG}"
+echo "Downloads\SavePath=${MEDIA_FOLDER}/Torrents/" | tee -a "${QBITT_CONFIG}"
+echo "Downloads\TempPath=${MEDIA_FOLDER}/Torrents/Incomplete/" | tee -a "${QBITT_CONFIG}"
+echo 'Downloads\TempPathEnabled=true' | tee -a "${QBITT_CONFIG}"
+echo 'General\Locale=fr_FR' | tee -a "${QBITT_CONFIG}"
+echo 'Queueing\QueueingEnabled=false' | tee -a "${QBITT_CONFIG}"
+echo 'WebUI\Port=9080' | tee -a "${QBITT_CONFIG}"
+
+# Install the resource.language.fr_fr addon.
+if [ ! -d "${ADDON_FOLDER}/resource.language.fr_fr" ]; then
+    cd "${ADDON_FOLDER}"
+    version=$(curl -s 'https://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/?C=M&O=D' | grep -Po 'fr_fr-\K([\d.]+)(?=.zip)' | head -1)
+    curl -A "${AGENT_STRING}" -LO "http://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/resource.language.fr_fr-${version}.zip"
+    unzip "resource.language.fr_fr-${version}.zip"
+    rm "resource.language.fr_fr-${version}.zip"
+    cd "${HOME}"
+fi
+
+# Stop the kodi service.
+systemctl stop kodi
+
+# Edit the settings.xml file from estuary skin.
+# xmlstarlet ed --inplace -u '//*[@id="homemenunofavbutton"]' -v 'true' ${ESTUARY_CONF}
+xmlstarlet ed --inplace -u '//*[@id="homemenunogamesbutton"]' -v 'true' ${ESTUARY_CONF}
+xmlstarlet ed --inplace -u '//*[@id="homemenunomusicvideobutton"]' -v 'true' ${ESTUARY_CONF}
+# xmlstarlet ed --inplace -u '//*[@id="homemenunopicturesbutton"]' -v 'true' ${ESTUARY_CONF}
+# xmlstarlet ed --inplace -u '//*[@id="homemenunoprogramsbutton"]' -v 'true' ${ESTUARY_CONF}
+xmlstarlet ed --inplace -u '//*[@id="homemenunoradiobutton"]' -v 'true' ${ESTUARY_CONF}
+xmlstarlet ed --inplace -u '//*[@id="homemenunotvbutton"]' -v 'true' ${ESTUARY_CONF}
+# xmlstarlet ed --inplace -u '//*[@id="homemenunovideosbutton"]' -v 'true' ${ESTUARY_CONF}
+xmlstarlet ed --inplace -u '//*[@id="homemenunoweatherbutton"]' -v 'true' ${ESTUARY_CONF}
 
 # Edit the guisettings.xml file.
 xmlstarlet ed --inplace -u '//*[@id="addons.unknownsources"]/@default' -v 'false' ${GUI_SETTINGS}
@@ -32,42 +89,8 @@ xmlstarlet ed --inplace -u '//*[@id="videolibrary.backgroundupdate"]' -v 'true' 
 xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]/@default' -v 'false' ${GUI_SETTINGS}
 xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]' -v '2' ${GUI_SETTINGS}
 
-# TODO: Install the resource.language.fr_fr language.
-# TODO: Always install the latest version.
-if [ ! -d "${ADDON_FOLDER}/resource.language.fr_fr" ]; then
-    cd "${ADDON_FOLDER}"
-    curl -A "${AGENT_STRING}" -LO 'http://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/resource.language.fr_fr-9.0.36.zip'
-    unzip resource.language.fr_fr-9.0.36.zip
-    rm resource.language.fr_fr-9.0.36.zip
-    cd "${HOME}"
-fi
+# Start the kodi service.
+systemctl start kodi
 
-# Install the thoradia repository.
-# TODO: Always install the latest version.
-if [ ! -d "${ADDON_FOLDER}/service.thoradia" ]; then
-    cd "${ADDON_FOLDER}"
-    curl -A "${AGENT_STRING}" -LO "${THORADIA_URL}/releases/download/9.80.6.25/service.thoradia-9.80.6.25.zip"
-    unzip service.thoradia-9.80.6.25.zip
-    rm service.thoradia-9.80.6.25.zip
-    cd "${HOME}"
-fi
-
-# Install the qbittorrent service.
-# TODO: Always install the latest version.
-if [ ! -d "${ADDON_FOLDER}/service.qbittorrent" ]; then
-    cd "${ADDON_FOLDER}"
-    curl -A "${AGENT_STRING}" -LO "${THORADIA_URL}/raw/9.80.9/9.80.9/ARMv8/arm/service.qbittorrent/service.qbittorrent-9.80.9.35.zip"
-    unzip service.qbittorrent-9.80.9.35.zip
-    rm service.qbittorrent-9.80.9.35.zip
-    cd "${HOME}"
-fi
-
-# Edit the qBittorrent.conf file.
-# TODO: Get the external drive name automatically.
-mkdir -p "$(dirname "${QBITT_CONFIG}")" && cat /dev/null >"${QBITT_CONFIG}"
-echo 'Bittorrent\MaxRatio=0' | tee -a "${QBITT_CONFIG}"
-echo 'Downloads\SavePath=/var/media/Expansion/Torrents/' | tee -a "${QBITT_CONFIG}"
-echo 'Downloads\TempPath=/var/media/Expansion/Torrents/Incomplete/' | tee -a "${QBITT_CONFIG}"
-echo 'Downloads\TempPathEnabled=true' | tee -a "${QBITT_CONFIG}"
-echo 'General\Locale=fr_FR' | tee -a "${QBITT_CONFIG}"
-echo 'WebUI\Username=admin' | tee -a "${QBITT_CONFIG}"
+# Finally reboot the device.
+reboot
