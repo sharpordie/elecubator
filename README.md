@@ -11,4 +11,14 @@
   </tr>
 </table>
 
-> The script was only tested on my own machine.
+## Usage
+
+```shell
+git clone https://github.com/sharpordie/elecubator.git
+
+cd elecubator
+
+chmod +x ./elecubator.sh
+
+./elecubator.sh
+```

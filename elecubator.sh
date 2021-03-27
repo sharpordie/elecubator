@@ -12,14 +12,11 @@ readonly SOURCES_FILE="${HOME}/.kodi/userdata/sources.xml"
 # Create the folder tree on the external drive.
 if [ "${MEDIA_FOLDER}" != "/var/media/" ]; then
     mkdir -p "${MEDIA_FOLDER}/Albums"
-    # mkdir -p "${MEDIA_FOLDER}/Animes"
-    # mkdir -p "${MEDIA_FOLDER}/Cartoons"
     mkdir -p "${MEDIA_FOLDER}/Movies"
     mkdir -p "${MEDIA_FOLDER}/Pictures"
     mkdir -p "${MEDIA_FOLDER}/Series"
     mkdir -p "${MEDIA_FOLDER}/Torrents"
     mkdir -p "${MEDIA_FOLDER}/Torrents/Incomplete"
-    mkdir -p "${MEDIA_FOLDER}/Tutorials"
 fi
 
 # Install the entware package manager and reboot.
@@ -55,14 +52,14 @@ fi
 systemctl stop kodi
 
 # Edit the settings.xml file from estuary skin.
-# xmlstarlet ed --inplace -u '//*[@id="homemenunofavbutton"]' -v 'true' ${ESTUARY_CONF}
+xmlstarlet ed --inplace -u '//*[@id="homemenunofavbutton"]' -v 'true' ${ESTUARY_CONF}
 xmlstarlet ed --inplace -u '//*[@id="homemenunogamesbutton"]' -v 'true' ${ESTUARY_CONF}
 xmlstarlet ed --inplace -u '//*[@id="homemenunomusicvideobutton"]' -v 'true' ${ESTUARY_CONF}
 # xmlstarlet ed --inplace -u '//*[@id="homemenunopicturesbutton"]' -v 'true' ${ESTUARY_CONF}
-# xmlstarlet ed --inplace -u '//*[@id="homemenunoprogramsbutton"]' -v 'true' ${ESTUARY_CONF}
+xmlstarlet ed --inplace -u '//*[@id="homemenunoprogramsbutton"]' -v 'true' ${ESTUARY_CONF}
 xmlstarlet ed --inplace -u '//*[@id="homemenunoradiobutton"]' -v 'true' ${ESTUARY_CONF}
 xmlstarlet ed --inplace -u '//*[@id="homemenunotvbutton"]' -v 'true' ${ESTUARY_CONF}
-# xmlstarlet ed --inplace -u '//*[@id="homemenunovideosbutton"]' -v 'true' ${ESTUARY_CONF}
+xmlstarlet ed --inplace -u '//*[@id="homemenunovideosbutton"]' -v 'true' ${ESTUARY_CONF}
 xmlstarlet ed --inplace -u '//*[@id="homemenunoweatherbutton"]' -v 'true' ${ESTUARY_CONF}
 
 # Edit the guisettings.xml file.
