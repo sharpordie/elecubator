@@ -23,7 +23,8 @@ fi
 # Install the entware package manager and reboot.
 if ! [ -x "$(command -v opkg)" ]; then
     echo "(sleep 10 && /usr/bin/sh ${current_file})&" | tee "${startup_file}"
-    yes | installentware
+    installentware
+    reboot
     exit 1
 fi
 
