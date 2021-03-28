@@ -1,90 +1,98 @@
 #!/usr/bin/env bash
 
-# Constant variables.
-readonly ADDON_FOLDER="${HOME}/.kodi/addons"
-readonly AGENT_STRING="Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0"
-readonly ESTUARY_CONF="${HOME}/.kodi/userdata/addon_data/skin.estuary/settings.xml"
-readonly GUI_SETTINGS="${HOME}/.kodi/userdata/guisettings.xml"
-readonly MEDIA_FOLDER="/var/media/$(ls /var/media | sort -n | head -1)"
-readonly QBITT_CONFIG="${HOME}/.opt/etc/qBittorrent_entware/config/qBittorrent.conf"
-readonly SOURCES_FILE="${HOME}/.kodi/userdata/sources.xml"
+# Script variables.
+addon_folder="${HOME}/.kodi/addons"
+current_file="$(dirname "$(readlink -f "$0")")/$(basename "$0")"
+est_settings="${HOME}/.kodi/userdata/addon_data/skin.estuary/settings.xml"
+gui_settings="${HOME}/.kodi/userdata/guisettings.xml"
+media_folder="$(find /var/media -type d | sort -r | head -1)"
+qbt_settings="${HOME}/.opt/etc/qBittorrent_entware/config/qBittorrent.conf"
+sources_file="${HOME}/.kodi/userdata/sources.xml"
+startup_file="${HOME}/.config/autostart.sh"
 
 # Create the folder tree on the external drive.
-if [ "${MEDIA_FOLDER}" != "/var/media/" ]; then
-    mkdir -p "${MEDIA_FOLDER}/Albums"
-    mkdir -p "${MEDIA_FOLDER}/Movies"
-    mkdir -p "${MEDIA_FOLDER}/Pictures"
-    mkdir -p "${MEDIA_FOLDER}/Series"
-    mkdir -p "${MEDIA_FOLDER}/Torrents"
-    mkdir -p "${MEDIA_FOLDER}/Torrents/Incomplete"
+if [ "${media_folder}" != "/var/media" ]; then
+    mkdir -p "${media_folder}/Albums"
+    mkdir -p "${media_folder}/Movies"
+    mkdir -p "${media_folder}/Pictures"
+    mkdir -p "${media_folder}/Series"
+    mkdir -p "${media_folder}/Torrents"
+    mkdir -p "${media_folder}/Torrents/Incomplete"
 fi
 
 # Install the entware package manager and reboot.
-if ! [ -x "$(command -v opkg)" ]; then yes | installentware; fi
+if ! [ -x "$(command -v opkg)" ]; then
+    echo "(sleep 10 && /usr/bin/sh ${current_file})&" | tee "${startup_file}"
+    yes | installentware
+    exit 1
+fi
+
+# Remove the previously created autostart.sh script.
+rm -f "${startup_file}"
 
 # Install the qbittorrent package.
 opkg update && opkg upgrade
 opkg install qbittorrent
 
-# Edit the qBittorrent.conf file.
-mkdir -p "$(dirname "${QBITT_CONFIG}")" && cat /dev/null >"${QBITT_CONFIG}"
-echo '[Preferences]' | tee -a "${QBITT_CONFIG}"
-echo 'Bittorrent\MaxRatio=0' | tee -a "${QBITT_CONFIG}"
-echo 'Connection\PortRangeMin=18032' | tee -a "${QBITT_CONFIG}"
-echo "Downloads\SavePath=${MEDIA_FOLDER}/Torrents/" | tee -a "${QBITT_CONFIG}"
-echo "Downloads\TempPath=${MEDIA_FOLDER}/Torrents/Incomplete/" | tee -a "${QBITT_CONFIG}"
-echo 'Downloads\TempPathEnabled=true' | tee -a "${QBITT_CONFIG}"
-echo 'General\Locale=fr_FR' | tee -a "${QBITT_CONFIG}"
-echo 'Queueing\QueueingEnabled=false' | tee -a "${QBITT_CONFIG}"
-echo 'WebUI\Port=9080' | tee -a "${QBITT_CONFIG}"
+# Edit the qbittorrent settings.
+mkdir -p "$(dirname "${qbt_settings}")" && cat /dev/null >"${qbt_settings}"
+echo '[Preferences]' | tee -a "${qbt_settings}"
+echo 'Bittorrent\MaxRatio=0' | tee -a "${qbt_settings}"
+echo 'Connection\PortRangeMin=18032' | tee -a "${qbt_settings}"
+echo "Downloads\SavePath=${media_folder}/Torrents/" | tee -a "${qbt_settings}"
+echo "Downloads\TempPath=${media_folder}/Torrents/Incomplete/" | tee -a "${qbt_settings}"
+echo 'Downloads\TempPathEnabled=true' | tee -a "${qbt_settings}"
+echo 'General\Locale=fr_FR' | tee -a "${qbt_settings}"
+echo 'Queueing\QueueingEnabled=false' | tee -a "${qbt_settings}"
+echo 'WebUI\Port=9080' | tee -a "${qbt_settings}"
 
 # Install the resource.language.fr_fr addon.
-if [ ! -d "${ADDON_FOLDER}/resource.language.fr_fr" ]; then
-    cd "${ADDON_FOLDER}"
+if [ ! -d "${addon_folder}/resource.language.fr_fr" ]; then
+    cd "${addon_folder}" || exit
     version=$(curl -s 'https://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/?C=M&O=D' | grep -Po 'fr_fr-\K([\d.]+)(?=.zip)' | head -1)
-    curl -A "${AGENT_STRING}" -LO "http://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/resource.language.fr_fr-${version}.zip"
+    curl -LO "http://mirrors.kodi.tv/addons/matrix/resource.language.fr_fr/resource.language.fr_fr-${version}.zip"
     unzip "resource.language.fr_fr-${version}.zip"
     rm "resource.language.fr_fr-${version}.zip"
-    cd "${HOME}"
+    cd "${HOME}" || exit
 fi
 
 # Stop the kodi service.
 systemctl stop kodi
 
-# Edit the settings.xml file from estuary skin.
-xmlstarlet ed --inplace -u '//*[@id="homemenunofavbutton"]' -v 'true' ${ESTUARY_CONF}
-xmlstarlet ed --inplace -u '//*[@id="homemenunogamesbutton"]' -v 'true' ${ESTUARY_CONF}
-xmlstarlet ed --inplace -u '//*[@id="homemenunomusicvideobutton"]' -v 'true' ${ESTUARY_CONF}
-# xmlstarlet ed --inplace -u '//*[@id="homemenunopicturesbutton"]' -v 'true' ${ESTUARY_CONF}
-xmlstarlet ed --inplace -u '//*[@id="homemenunoprogramsbutton"]' -v 'true' ${ESTUARY_CONF}
-xmlstarlet ed --inplace -u '//*[@id="homemenunoradiobutton"]' -v 'true' ${ESTUARY_CONF}
-xmlstarlet ed --inplace -u '//*[@id="homemenunotvbutton"]' -v 'true' ${ESTUARY_CONF}
-xmlstarlet ed --inplace -u '//*[@id="homemenunovideosbutton"]' -v 'true' ${ESTUARY_CONF}
-xmlstarlet ed --inplace -u '//*[@id="homemenunoweatherbutton"]' -v 'true' ${ESTUARY_CONF}
+# Edit the skin.estuary settings.
+xmlstarlet ed --inplace -u '//*[@id="homemenunofavbutton"]' -v 'true' "${est_settings}"
+xmlstarlet ed --inplace -u '//*[@id="homemenunogamesbutton"]' -v 'true' "${est_settings}"
+xmlstarlet ed --inplace -u '//*[@id="homemenunomusicvideobutton"]' -v 'true' "${est_settings}"
+# xmlstarlet ed --inplace -u '//*[@id="homemenunopicturesbutton"]' -v 'true' ${est_settings}
+xmlstarlet ed --inplace -u '//*[@id="homemenunoprogramsbutton"]' -v 'true' "${est_settings}"
+xmlstarlet ed --inplace -u '//*[@id="homemenunoradiobutton"]' -v 'true' "${est_settings}"
+xmlstarlet ed --inplace -u '//*[@id="homemenunotvbutton"]' -v 'true' "${est_settings}"
+xmlstarlet ed --inplace -u '//*[@id="homemenunovideosbutton"]' -v 'true' "${est_settings}"
+xmlstarlet ed --inplace -u '//*[@id="homemenunoweatherbutton"]' -v 'true' "${est_settings}"
 
-# Edit the guisettings.xml file.
-xmlstarlet ed --inplace -u '//*[@id="addons.unknownsources"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="addons.unknownsources"]' -v 'true' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.dtshdpassthrough"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.dtshdpassthrough"]' -v 'true' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.dtspassthrough"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.dtspassthrough"]' -v 'true' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.eac3passthrough"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.eac3passthrough"]' -v 'true' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.passthrough"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.passthrough"]' -v 'true' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.truehdpassthrough"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="audiooutput.truehdpassthrough"]' -v 'true' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="locale.country"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="locale.country"]' -v 'Belgique' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="locale.language"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="locale.language"]' -v 'resource.language.fr_fr' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="slideshow.highqualitydownscaling"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="slideshow.highqualitydownscaling"]' -v 'true' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="videolibrary.backgroundupdate"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="videolibrary.backgroundupdate"]' -v 'true' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]/@default' -v 'false' ${GUI_SETTINGS}
-xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]' -v '2' ${GUI_SETTINGS}
+# Edit the gui settings.
+xmlstarlet ed --inplace -u '//*[@id="addons.unknownsources"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="addons.unknownsources"]' -v 'true' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.dtshdpassthrough"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.dtshdpassthrough"]' -v 'true' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.dtspassthrough"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.dtspassthrough"]' -v 'true' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.eac3passthrough"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.eac3passthrough"]' -v 'true' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.passthrough"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.passthrough"]' -v 'true' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.truehdpassthrough"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="audiooutput.truehdpassthrough"]' -v 'true' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="locale.country"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="locale.country"]' -v 'Belgique' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="locale.language"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="locale.language"]' -v 'resource.language.fr_fr' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="slideshow.highqualitydownscaling"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="slideshow.highqualitydownscaling"]' -v 'true' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="videolibrary.backgroundupdate"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="videolibrary.backgroundupdate"]' -v 'true' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]/@default' -v 'false' "${gui_settings}"
+xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]' -v '2' "${gui_settings}"
 
 # Start the kodi service.
 systemctl start kodi

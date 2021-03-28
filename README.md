@@ -15,10 +15,7 @@
 
 ```shell
 git clone https://github.com/sharpordie/elecubator.git
-
 cd elecubator
-
 chmod +x ./elecubator.sh
-
 ./elecubator.sh
 ```
