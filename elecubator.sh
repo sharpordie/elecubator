@@ -59,6 +59,7 @@ fi
 
 # Stop the kodi service.
 systemctl stop kodi
+sleep 10
 
 # Edit the skin.estuary settings.
 xmlstarlet ed --inplace -u '//*[@id="homemenunofavbutton"]' -v 'true' "${est_settings}"
@@ -97,6 +98,7 @@ xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]' -v '2' "${
 
 # Start the kodi service.
 systemctl start kodi
+sleep 10
 
 # Finally reboot the device.
 reboot
