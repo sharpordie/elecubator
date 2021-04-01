@@ -7,6 +7,7 @@ est_settings="${HOME}/.kodi/userdata/addon_data/skin.estuary/settings.xml"
 gui_settings="${HOME}/.kodi/userdata/guisettings.xml"
 media_folder="$(find /var/media -maxdepth 1 -type d | sort -r | head -1)"
 qbt_settings="${HOME}/.opt/etc/qBittorrent_entware/config/qBittorrent.conf"
+smb_settings="${HOME}/.cache/services/samba.conf"
 sources_file="${HOME}/.kodi/userdata/sources.xml"
 startup_file="${HOME}/.config/autostart.sh"
 
@@ -104,9 +105,22 @@ xmlstarlet ed --inplace -u '//*[@id="videolibrary.backgroundupdate"]/@default' -
 xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]' -v '2' "${gui_settings}"
 xmlstarlet ed --inplace -u '//*[@id="videoplayer.adjustrefreshrate"]/@default' -v 'false' "${gui_settings}"
 
+# Edit the viewstates settings.
+xmlstarlet ed --inplace -u '/settings/viewstates/videonavtitles/sortattributes' -v '0' "${gui_settings}"
+xmlstarlet ed --inplace -u '/settings/viewstates/videonavtitles/sortmethod' -v '40' "${gui_settings}"
+xmlstarlet ed --inplace -u '/settings/viewstates/videonavtitles/sortorder' -v '2' "${gui_settings}"
+xmlstarlet ed --inplace -u '/settings/viewstates/videonavtitles/viewmode' -v '131123' "${gui_settings}"
+xmlstarlet ed --inplace -u '/settings/viewstates/videonavtvshows/sortattributes' -v '0' "${gui_settings}"
+xmlstarlet ed --inplace -u '/settings/viewstates/videonavtvshows/sortmethod' -v '40' "${gui_settings}"
+xmlstarlet ed --inplace -u '/settings/viewstates/videonavtvshows/sortorder' -v '2' "${gui_settings}"
+xmlstarlet ed --inplace -u '/settings/viewstates/videonavtvshows/viewmode' -v '131123' "${gui_settings}"
+
+# Secure the samba shares.
+# sed -i 's/SAMBA_SECURE=.*/SAMBA_SECURE="true"/' "${smb_settings}"
+
 # Start the kodi service.
 systemctl start kodi
 sleep 10
 
 # Finally reboot the device.
-reboot
+kodi-send --action=reboot
